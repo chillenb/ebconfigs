@@ -1,0 +1,58 @@
+easyblock = 'PythonBundle'
+
+name = 'MKLpy'
+version = '2026.03'
+
+homepage = 'https://numpy.org/'
+description = "mkl-umath and mkl-fft"
+
+
+toolchain = {'name': 'iimkl', 'version': '2024a'}
+toolchainopts = {'pic': True, 'lowopt': True}
+
+builddependencies = [
+    ('Cython', '3.1.2', '', ('GCCcore', '13.3.0')),
+    ('scikit-build', '0.17.6', '', ('GCCcore', '13.3.0')),  # required for building mkl-umath and mkl-fft
+    ('CMake', '3.29.3', '', ('GCCcore', '13.3.0')),  # required for building mkl-umath and mkl-fft
+    ('Ninja', '1.13.0', '', ('GCCcore', '13.3.0')),
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('Python-bundle-PyPI', '2024.06', '', ('GCCcore', '13.3.0')),
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+]
+
+local_mklumath_commit = "fabfdeb"
+local_mklumath_version = "20260401"
+
+local_mklfft_commit = "02318c7"
+local_mklfft_version = "20260401"
+
+# order is important!
+exts_list = [
+    ('mkl-service', '2.6.1', {
+        # workaround for: ValueError: invalid pyproject.toml config: project.license
+        'preinstallopts': "sed -i '/^license =/d' pyproject.toml && ",
+        'sources': ['%(version)s.tar.gz'],
+        'source_urls': ['https://github.com/IntelPython/mkl-service/archive/'],
+        'checksums': ['88fbad376f6cccce83345368f6af88cf3ae03d5eacf523862c3a62967541b4af'],
+        'modulename': 'mkl',
+    }),
+    ('mkl-umath', local_mklumath_version, {
+        # workaround for: ValueError: invalid pyproject.toml config: project.license
+        'preinstallopts': "sed -i '/^license =/d' pyproject.toml && ",
+        'sources': ['%s.tar.gz' % local_mklumath_commit],
+        'source_urls': ['https://github.com/IntelPython/mkl_umath/archive/'],
+        'checksums': ['ff6616b49191ced8bfe38a3a8bc3b3d7ebe01374bde3052790169aab7c9ed715'],
+    }),
+    ('mkl-fft', local_mklfft_version, {
+        # workaround for: ValueError: invalid pyproject.toml config: project.license
+        'preinstallopts': "sed -i '/^license =/d' pyproject.toml && ",
+        'sources': ['%s.tar.gz' % local_mklfft_commit],
+        'source_urls': ['https://github.com/IntelPython/mkl_fft/archive/'],
+        'checksums': ['fb78de44bc16b7b72e1c8f5df55e2f6c58cc434762eacea4982daa73606cd307'],
+    }),
+]
+
+moduleclass = 'lang'

@@ -1,0 +1,26 @@
+easyblock = 'PythonBundle'
+
+name = 'mpi4py'
+version = '4.1.1'
+
+homepage = 'https://github.com/mpi4py/mpi4py'
+description = """MPI for Python (mpi4py) provides bindings of the Message Passing Interface (MPI) standard for
+ the Python programming language, allowing any Python program to exploit multiple processors."""
+
+toolchain = {'name': 'gimkl', 'version': '2024a'}
+
+builddependencies = [
+    ('Cython', '3.1.2', '', ('GCCcore', '13.3.0')),
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+]
+
+exts_list = [
+    (name, version, {
+        'checksums': ['eb2c8489bdbc47fdc6b26ca7576e927a11b070b6de196a443132766b3d0a2a22'],
+    }),
+]
+
+moduleclass = 'lib'

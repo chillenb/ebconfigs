@@ -1,0 +1,44 @@
+easyblock = 'PythonBundle'
+
+name = 'NumPy'
+version = '2.4.4'
+
+homepage = 'https://numpy.org/'
+description = "NumPy with mkl-umath and mkl-fft patch"
+
+toolchain = {'name': 'gimkl', 'version': '2024a'}
+toolchainopts = {'pic': True, 'lowopt': True}
+
+builddependencies = [
+    ('hypothesis', '6.103.1', '', ('GCCcore', '13.3.0')),
+    ('UnZip', '6.0', '', ('GCCcore', '13.3.0')),
+    # scipy >= 1.9.0 uses Meson/Ninja
+    ('Meson', '1.8.2', '', ('GCCcore', '13.3.0')),
+    ('meson-python', '0.18.0', '', ('GCCcore', '13.3.0')),
+    ('Ninja', '1.13.0', '', ('GCCcore', '13.3.0')),
+    ('pkgconf', '2.2.0', '', ('GCCcore', '13.3.0')),  # required by scipy
+    ('Cython', '3.1.2', '', ('GCCcore', '13.3.0')),  # required by numpy and scipy
+    ('spin', '0.14', '', ('GCCcore', '13.3.0')),  # required for testing numpy
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('Python-bundle-PyPI', '2024.06', '', ('GCCcore', '13.3.0')),
+]
+
+# order is important!
+exts_list = [
+    ('numpy', '2.4.4', {
+        'installopts': '-Csetup-args=-Dmkl-threading=iomp',
+        'patches': [
+            'numpy-2.4.4-mklfft-and-mklumath-patch.patch',
+        ],
+        'checksums': [
+            {'numpy-2.4.4.tar.gz': '2d390634c5182175533585cc89f3608a4682ccb173cc9bb940b2881c8d6f8fa0'},
+            {'numpy-2.4.4-mklfft-and-mklumath-patch.patch':
+             'ed014b7e2438e82a15c67e2e8d144f4188d5ae5d1d5dd9ea420329d68b628975'},
+        ],
+    }),
+]
+
+moduleclass = 'lang'

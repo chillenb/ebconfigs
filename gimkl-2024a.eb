@@ -1,0 +1,21 @@
+# This is an easyconfig file for EasyBuild, see http://easybuilders.github.io/easybuild
+easyblock = 'Toolchain'
+
+name = 'gimkl'
+version = '2024a'
+
+homepage = 'https://software.intel.com/parallel-studio-xe'
+description = """GCC with intel MKL and intel MPI"""
+
+toolchain = SYSTEM
+
+local_comp_ver = '2024.2.0'
+local_gccver = '13.3.0'
+
+dependencies = [
+    ('GCC', local_gccver),  # includes both GCC and binutils
+    ('imkl', local_comp_ver, '', SYSTEM),
+    ('impi', '2021.13.0', '', ('intel-compilers', local_comp_ver)),
+]
+
+moduleclass = 'toolchain'
