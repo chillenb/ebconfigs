@@ -1,0 +1,22 @@
+easyblock = 'Bundle'
+
+name = 'PyscfDeps'
+version = '1.0'
+
+homepage = 'https://pyscf.org/'
+description = "Dependencies for PySCF, configured by chillenb"
+
+toolchain = {'name': 'gimkl', 'version': '2024a'}
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('Python-bundle-PyPI', '2024.06', '', ('GCCcore', '13.3.0')),
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+    ('SciPy', '1.17.1', '', ('gimkl', '2024a')),
+    ('mpi4py', '4.1.1', '', ('gimkl', '2024a')),
+    ('MKLpy', '2026.03', '', ('iimkl', '2024a')),
+    ('h5py', '3.14.0', '', ('gimkl', '2024a')),
+    ('IPython', '8.28.0', '', ('GCCcore', '13.3.0')),
+]
+
+moduleclass = 'lang'

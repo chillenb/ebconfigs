@@ -1,0 +1,43 @@
+easyblock = 'PythonBundle'
+
+name = 'SciPy'
+version = '1.17.1'
+
+homepage = 'https://scipy.org/'
+description = "SciPy"
+
+toolchain = {'name': 'gimkl', 'version': '2024a'}
+toolchainopts = {'pic': True, 'lowopt': True}
+
+builddependencies = [
+    ('hypothesis', '6.103.1', '', ('GCCcore', '13.3.0')),
+    ('UnZip', '6.0', '', ('GCCcore', '13.3.0')),
+    # scipy >= 1.9.0 uses Meson/Ninja
+    ('Meson', '1.8.2', '', ('GCCcore', '13.3.0')),
+    ('meson-python', '0.18.0', '', ('GCCcore', '13.3.0')),
+    ('Ninja', '1.13.0', '', ('GCCcore', '13.3.0')),
+    ('pkgconf', '2.2.0', '', ('GCCcore', '13.3.0')),  # required by scipy
+    ('Cython', '3.1.2', '', ('GCCcore', '13.3.0')),  # required by numpy and scipy
+    ('spin', '0.14', '', ('GCCcore', '13.3.0')),  # required for testing numpy
+    ('pybind11', '3.0.0', '', ('GCC', '13.3.0')),  # required for building scipy
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('Python-bundle-PyPI', '2024.06', '', ('GCCcore', '13.3.0')),
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+    ('SciPydepends', '2024a', '', ('gimkl', '2024a')),
+]
+
+# order is important!
+exts_list = [
+    ('scipy', '1.17.1', {
+        'easyblock': 'PythonPackage',
+        'installopts': '-Csetup-args=-Dblas=mkl-sdl -Csetup-args=-Dlapack=mkl-sdl',
+        'checksums': [
+            {'scipy-1.17.1.tar.gz': '95d8e012d8cb8816c226aef832200b1d45109ed4464303e997c5b13122b297c0'},
+        ],
+    }),
+]
+
+moduleclass = 'lang'

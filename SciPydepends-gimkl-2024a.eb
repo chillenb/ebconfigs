@@ -1,0 +1,50 @@
+easyblock = 'PythonBundle'
+
+name = 'SciPydepends'
+version = '2024a'
+
+homepage = 'https://scipy.org/'
+description = "SciPy stupid dependencies"
+
+toolchain = {'name': 'gimkl', 'version': '2024a'}
+toolchainopts = {'pic': True, 'lowopt': True}
+
+builddependencies = [
+    ('hypothesis', '6.103.1', '', ('GCCcore', '13.3.0')),
+    ('UnZip', '6.0', '', ('GCCcore', '13.3.0')),
+    # scipy >= 1.9.0 uses Meson/Ninja
+    ('Meson', '1.8.2', '', ('GCCcore', '13.3.0')),
+    ('meson-python', '0.18.0', '', ('GCCcore', '13.3.0')),
+    ('Ninja', '1.13.0', '', ('GCCcore', '13.3.0')),
+    ('pkgconf', '2.2.0', '', ('GCCcore', '13.3.0')),  # required by scipy
+    ('Cython', '3.1.2', '', ('GCCcore', '13.3.0')),  # required by numpy and scipy
+    ('spin', '0.14', '', ('GCCcore', '13.3.0')),  # required for testing numpy
+    ('pybind11', '3.0.0', '', ('GCC', '13.3.0')),  # required for building scipy
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('Python-bundle-PyPI', '2024.06', '', ('GCCcore', '13.3.0')),
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+]
+
+# order is important!
+exts_list = [
+    ('ply', '3.11', {
+        'checksums': ['00c7c1aaa88358b9c765b6d3000c6eec0ba42abca5351b095321aef446081da3'],
+    }),
+    ('gast', '0.6.0', {
+        'checksums': ['88fc5300d32c7ac6ca7b515310862f71e6fdf2c029bbec7c66c0f5dd47b6b1fb'],
+    }),
+    ('beniget', '0.4.2.post1', {
+        'checksums': ['a0258537e65e7e14ec33a86802f865a667f949bb6c73646d55e42f7c45a052ae'],
+    }),
+    ('pythran', '0.18.0', {
+        'checksums': ['5c003e8cbedf6dbb68c2869c49fc110ce8b5e8982993078a4a819f1dadc4fc6a'],
+    }),
+    ('versioneer', '0.29', {
+        'checksums': ['5ab283b9857211d61b53318b7c792cf68e798e765ee17c27ade9f6c924235731'],
+    }),
+]
+
+moduleclass = 'lang'
