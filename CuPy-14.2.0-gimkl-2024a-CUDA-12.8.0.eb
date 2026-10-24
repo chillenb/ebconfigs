@@ -1,0 +1,81 @@
+easyblock = 'PythonBundle'
+
+name = 'CuPy'
+version = '14.2.0'
+versionsuffix = '-CUDA-%(cudaver)s'
+
+homepage = 'https://cupy.dev'
+description = "CuPy is an open-source array library accelerated with NVIDIA CUDA."
+
+toolchain = {'name': 'gimkl', 'version': '2024a'}
+
+builddependencies = [
+    ('hypothesis', '6.103.1', '', ('GCCcore', '13.3.0')),
+    ('setuptools', '80.9.0', '', ('GCCcore', '13.3.0')),
+    ('Cython', '3.2.9', '', ('GCCcore', '13.3.0')),  # CuPy 14 requires Cython>=3.2,<3.3 to build
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+    ('SciPy', '1.17.1', '', ('gimkl', '2024a')),
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+    ('CUDA', '12.8.0', '', SYSTEM),
+    ('NCCL', '2.26.2', versionsuffix, ('GCCcore', '13.3.0')),
+    ('cuTENSOR', '2.5.0.2', versionsuffix, SYSTEM),
+    ('cuSPARSELt', '0.8.0.4', versionsuffix, SYSTEM),
+]
+
+# default CUDA compute capabilities to use (override via --cuda-compute-capabilities)
+cuda_compute_capabilities = ['8.6', '8.9', '9.0', '10.0']
+#cuda_compute_capabilities = ['7.0', '8.0', '8.6']
+
+exts_default_options = {'source_urls': [PYPI_LOWER_SOURCE]}
+
+_skip_tests = [
+    '--ignore tests/example_tests',  # examples are not included
+    '--deselect tests/cupyx_tests/scipy_tests/signal_tests/test_ltisys.py::Test_bode::test_from_state_space',
+    '--deselect tests/cupyx_tests/scipy_tests/signal_tests/test_fir_filter_design.py::TestFirls::test_firls',
+    '--deselect tests/cupyx_tests/scipy_tests/signal_tests/test_ltisys.py::TestPlacePoles::test_real_2',
+    # New failures in 13.6.0, they all seems to be related to on-the-fly compilation failing
+    '--deselect tests/cupy_tests/core_tests/test_raw.py::TestRawPicklable',   # ::test_raw_picklable
+    '--deselect tests/cupy_tests/fft_tests/test_callback.py::Test1dCallbacks',
+]
+
+# For testing with new versions of CuPy, please enable the slow testing setting below,
+# but switch to the much lighter fast testing before submitting the .eb file, so users
+# can install on GPUs with moderate RAM.
+
+# _parallel_tests, _test_type = 4, 'not slow'
+_parallel_tests, _test_type = 1, 'fast'
+
+exts_list = [
+    # CuPy 14 uses cuda-pathfinder to locate CUDA headers/libraries at runtime (replaces fastrlock dep)
+    ('cuda-pathfinder', '1.8.4', {
+        'source_urls': ['https://pypi.python.org/packages/py3/c/cuda_pathfinder'],
+        'sources': ['cuda_pathfinder-%(version)s-py3-none-any.whl'],
+        'modulename': 'cuda.pathfinder',
+        'checksums': ['85a4e708c725d603f576042ef32781a3d1737c51e84c35fe361d2680191af65a'],
+    }),
+    ('cupy', version, {
+        # cusparselt_0.6.0 patch is upstream in CuPy 14; the 13.6.0 TestRaw patch no longer applies
+        'patches': [
+            'cupy-13.0.0_eb_ccc.patch',
+        ],
+        'preinstallopts': 'CUPY_NUM_BUILD_JOBS=%(parallel)s EB_CCC="%(cuda_cc_cmake)s" ',
+        'runtest': 'export CUPY_TEST_GPU_LIMIT=1 CUPY_CACHE_DIR="%%(builddir)s" && '
+                   'pytest -n %s tests -k "%s" ' % (_parallel_tests, _test_type) + ' '.join(_skip_tests),
+        'testinstall': True,
+        'checksums': [
+            {'cupy-14.2.0.tar.gz': 'cfed725e612178cfbdbf62f4a3a598b60edecbbca718c0d4580c21a16ae4a62c'},
+            {'cupy-13.0.0_eb_ccc.patch': 'bfe8b46344759f58491f55418bd9c856d6f72d681ee5fef12820009f808d2db1'},
+        ],
+    }),
+]
+
+sanity_check_commands = [
+    "python -c 'import cupy'",
+    "python -c 'import cupy; print(cupy.__version__)'",
+]
+
+moduleclass = 'lib'
