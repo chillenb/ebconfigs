@@ -1,0 +1,53 @@
+easyblock = 'CMakeMake'
+
+name = 'JDFTx'
+version = '1.7.0'
+
+homepage = 'https://jdftx.org'
+description = """JDFTx is a plane-wave density-functional theory (DFT) code designed to be
+as easy to develop with as it is easy to use, with a focus on joint DFT (JDFT)
+for solvated systems. This build is CPU-only, with MPI, Intel MKL (BLAS, LAPACK,
+FFT) and LibXC."""
+
+toolchain = {'name': 'intel', 'version': '2024a'}
+toolchainopts = {'usempi': True}
+
+source_urls = ['https://github.com/shankar1729/jdftx/archive/refs/tags/']
+sources = ['v%(version)s.tar.gz']
+checksums = ['876374efbf785d02fdf547f7cf64deedc6f5618f5449e775a4c20b28f1696e3d']
+
+builddependencies = [
+    ('CMake', '3.29.3'),
+]
+
+dependencies = [
+    ('GSL', '2.8'),
+    ('libxc', '6.2.2'),
+]
+
+# CMakeLists.txt lives in the jdftx/ subdirectory of the source tree
+start_dir = 'jdftx'
+
+configopts = ' '.join([
+    '-DEnableMPI=yes',
+    '-DEnableMKL=yes',
+    '-DMKL_PATH="$MKLROOT"',
+    '-DEnableLibXC=yes',
+    '-DLIBXC_PATH="$EBROOTLIBXC"',
+    '-DGSL_PATH="$EBROOTGSL"',
+    '-DEnableCUDA=no',
+])
+
+# the regression tests are full SCF runs; run them separately after install
+runtest = False
+
+sanity_check_paths = {
+    'files': ['bin/jdftx', 'bin/phonon', 'bin/wannier', 'lib/libjdftx.%s' % SHLIB_EXT],
+    'dirs': ['share/jdftx/pseudopotentials/GBRV', 'share/jdftx/pseudopotentials/SG15', 'share/jdftx/scripts'],
+}
+
+sanity_check_commands = ['jdftx -h']
+
+modextrapaths = {'PATH': 'share/jdftx/scripts'}
+
+moduleclass = 'chem'
