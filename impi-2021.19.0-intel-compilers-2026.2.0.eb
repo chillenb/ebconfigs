@@ -19,4 +19,8 @@ dependencies = [('UCX', '1.16.0')]
 # see https://community.intel.com/t5/Intel-MPI-Library/MPI-f08-with-polymorphic-argument-CLASS/m-p/1590421
 rebuild_f08_bindings = True
 
+# set $I_MPI_CC etc. in the module so mpiicc/mpiifort use icx/ifx, as during EasyBuild builds;
+# icc and ifort no longer exist, which breaks wrappers that record mpiicc (e.g. HDF5's h5pcc)
+set_mpi_wrappers_compiler = True
+
 moduleclass = 'mpi'
