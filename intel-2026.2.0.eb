@@ -1,0 +1,25 @@
+# This is an easyconfig file for EasyBuild, see http://easybuilders.github.io/easybuild
+easyblock = 'Toolchain'
+
+name = 'intel'
+version = '2026.2.0'
+
+homepage = 'https://docs.easybuild.io/common-toolchains/#common_toolchains_overview_intel'
+description = """Compiler toolchain including Intel compilers, Intel MPI and Intel Math Kernel Library (MKL).
+ oneAPI 2026.2 on GCCcore 13.3.0 (not the upstream 2026.x toolchain generation)."""
+
+toolchain = SYSTEM
+
+local_comp_ver = '2026.2.0'
+local_gccver = '13.3.0'
+
+dependencies = [
+    ('GCCcore', local_gccver),
+    ('binutils', '2.42', '', ('GCCcore', local_gccver)),
+    ('intel-compilers', local_comp_ver),
+    ('impi', '2021.19.0', '', ('intel-compilers', local_comp_ver)),
+    ('imkl', local_comp_ver, '', SYSTEM),
+    ('imkl-FFTW', local_comp_ver, '', ('iimpi', version)),
+]
+
+moduleclass = 'toolchain'

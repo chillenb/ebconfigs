@@ -1,0 +1,20 @@
+# This is an easyconfig file for EasyBuild, see http://easybuilders.github.io/easybuild
+easyblock = 'Toolchain'
+
+name = 'iimpi'
+version = '2026.2.0'
+
+homepage = 'https://software.intel.com/parallel-studio-xe'
+description = """Intel C/C++ and Fortran compilers, alongside Intel MPI.
+ oneAPI 2026.2 on GCCcore 13.3.0 (not the upstream 2026.x toolchain generation)."""
+
+toolchain = SYSTEM
+
+local_comp_ver = '2026.2.0'
+
+dependencies = [
+    ('intel-compilers', local_comp_ver),
+    ('impi', '2021.19.0', '', ('intel-compilers', local_comp_ver)),
+]
+
+moduleclass = 'toolchain'

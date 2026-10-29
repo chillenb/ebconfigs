@@ -1,0 +1,38 @@
+name = 'intel-compilers'
+version = '2026.2.0'
+
+homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/hpc-toolkit.html'
+description = "Intel C, C++ & Fortran compilers"
+
+toolchain = SYSTEM
+
+# see https://software.intel.com/content/www/us/en/develop/articles/oneapi-standalone-components.html
+sources = [
+    {
+        'source_urls': [
+            'https://registrationcenter-download.intel.com/akdlm/IRC_NAS/7f238c79-537b-428e-94ce-c42a2802709d/',
+        ],
+        'filename': 'intel-dpcpp-cpp-compiler-%(version)s.612_offline.sh',
+    },
+    {
+        'source_urls': [
+            'https://registrationcenter-download.intel.com/akdlm/IRC_NAS/f2267e6f-5a6a-431e-a3c9-cca1a8cc6534/',
+        ],
+        'filename': 'intel-fortran-compiler-%(version)s.606_offline.sh',
+    },
+]
+checksums = [
+    {'intel-dpcpp-cpp-compiler-2026.2.0.612_offline.sh':
+     'a0f6520589100d81a9bd0a0dbc6bedda1643d58236e30492a43b9a5ed0a0997f'},
+    {'intel-fortran-compiler-2026.2.0.606_offline.sh':
+     'a5d9891fba5d0575a1df9947f943f4aeb47b0db447124f7bdf5b641a21a0f14e'},
+]
+
+# built on the GCCcore 13.3.0 of the system 2024a stack rather than upstream's 15.2.0
+local_gccver = '13.3.0'
+dependencies = [
+    ('GCCcore', local_gccver),
+    ('binutils', '2.42', '', ('GCCcore', local_gccver)),
+]
+
+moduleclass = 'compiler'

@@ -1,0 +1,22 @@
+name = 'impi'
+version = '2021.19.0'
+
+homepage = 'https://software.intel.com/content/www/us/en/develop/tools/mpi-library.html'
+description = "Intel MPI Library, compatible with MPICH ABI"
+
+toolchain = {'name': 'intel-compilers', 'version': '2026.2.0'}
+
+# see https://software.intel.com/content/www/us/en/develop/articles/oneapi-standalone-components.html
+source_urls = [
+    'https://registrationcenter-download.intel.com/akdlm/IRC_NAS/2e543b5d-c46a-4fe1-bee9-5c9631f7fb06/',
+]
+sources = ['intel-mpi-%(version)s.568_offline.sh']
+checksums = ['522614302c6b84dd209c8f1a294b42ec4a9ef0421f51628bc461c8dbaa76dbfd']
+
+dependencies = [('UCX', '1.16.0')]
+
+# rebuild Fortran 2008 bindings to fix compilation failures when using CLASS(*) arguments,
+# see https://community.intel.com/t5/Intel-MPI-Library/MPI-f08-with-polymorphic-argument-CLASS/m-p/1590421
+rebuild_f08_bindings = True
+
+moduleclass = 'mpi'
