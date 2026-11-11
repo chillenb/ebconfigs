@@ -1,0 +1,78 @@
+easyblock = 'CMakeMake'
+
+name = 'JDFTx'
+# development snapshot after the 1.7.0 release: master at commit bea9f45 (2026-11-08)
+local_commit = 'bea9f45f789272d7af5d89815f9a32c1f45c9cc0'
+version = '1.7.0.20261108'
+versionsuffix = '-CUDA-%(cudaver)s'
+
+homepage = 'https://jdftx.org'
+description = """JDFTx is a plane-wave density-functional theory (DFT) code designed to be
+as easy to develop with as it is easy to use, with a focus on joint DFT (JDFT)
+for solvated systems. Development snapshot (master @ bea9f45) with NVIDIA GPU
+support (CUDA, cuBLAS, cuFFT, cuSolver), CUDA-aware OpenMPI, Intel MKL and a
+CUDA-enabled LibXC that is evaluated on the GPU (CudaLibXC). Note: with a CUDA
+LibXC, LibXC functionals only work from the _gpu executables; the CPU
+executables can still use JDFTx's built-in functionals."""
+
+toolchain = {'name': 'GCC', 'version': '13.3.0'}
+
+source_urls = ['https://github.com/shankar1729/jdftx/archive/']
+sources = [{
+    'download_filename': '%s.tar.gz' % local_commit,
+    'filename': 'JDFTx-%s.tar.gz' % local_commit,
+}]
+checksums = ['9953417672fc8473dbe8f4a8eca27fc3977a0a09bf93e66824917efd0aeb839f']
+
+builddependencies = [
+    ('CMake', '3.29.3', '', ('GCCcore', '13.3.0')),
+]
+
+dependencies = [
+    ('CUDA', '12.8.0', '', SYSTEM),
+    ('OpenMPI', '5.0.3', versionsuffix),
+    ('imkl', '2024.2.0', '', SYSTEM),
+    ('GSL', '2.8'),
+    ('libxc', '7.1.2', versionsuffix),
+]
+
+# Bouchet GPUs: A40/A5000 (8.6), L40S/RTX 5000 Ada (8.9), H100/H200 (9.0),
+# B200 (10.0), RTX Pro 6000 Blackwell (12.0); CMakeMake passes these as CMAKE_CUDA_ARCHITECTURES
+cuda_compute_capabilities = ['8.6', '8.9', '9.0', '10.0', '12.0']
+
+# CMakeLists.txt lives in the jdftx/ subdirectory of the source tree
+start_dir = 'jdftx'
+
+configopts = ' '.join([
+    '-DEnableMPI=yes',
+    '-DMPI_CXX_COMPILER="$EBROOTOPENMPI/bin/mpicxx"',
+    '-DCudaAwareMPI=yes',
+    '-DPinnedHostMemory=yes',
+    '-DEnableMKL=yes',
+    '-DMKL_PATH="$MKLROOT"',
+    '-DEnableLibXC=yes',
+    '-DCudaLibXC=yes',
+    '-DLIBXC_PATH="$EBROOTLIBXC"',
+    '-DGSL_PATH="$EBROOTGSL"',
+    '-DEnableCUDA=yes',
+    '-DEnableCuSolver=yes',
+    '-DCMAKE_CUDA_HOST_COMPILER="$EBROOTGCCCORE/bin/g++"',
+])
+
+# the regression tests are full SCF runs; run them separately after install
+runtest = False
+
+sanity_check_paths = {
+    'files': ['bin/jdftx', 'bin/phonon', 'bin/wannier',
+              'bin/jdftx_gpu', 'bin/phonon_gpu', 'bin/wannier_gpu',
+              'lib/libjdftx.%s' % SHLIB_EXT, 'lib/libjdftx_gpu.%s' % SHLIB_EXT],
+    'dirs': ['share/jdftx/pseudopotentials/GBRV', 'share/jdftx/pseudopotentials/SG15', 'share/jdftx/scripts'],
+}
+
+# no sanity check commands: with a CUDA LibXC even the CPU executables call
+# xc_func_init (which allocates GPU memory) at startup, so they abort on the
+# GPU-less build node ("no CUDA-capable device is detected"); test on a GPU node
+
+modextrapaths = {'PATH': 'share/jdftx/scripts'}
+
+moduleclass = 'chem'
