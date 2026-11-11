@@ -1,0 +1,80 @@
+easyblock = 'CMakeMake'
+
+name = 'JDFTx'
+version = '1.7.0'
+versionsuffix = '-CUDA-%(cudaver)s'
+
+homepage = 'https://jdftx.org'
+description = """JDFTx is a plane-wave density-functional theory (DFT) code designed to be
+as easy to develop with as it is easy to use, with a focus on joint DFT (JDFT)
+for solvated systems. This build has NVIDIA GPU support (CUDA, cuBLAS, cuFFT,
+cuSolver) plus CUDA-aware OpenMPI, Intel MKL (BLAS, LAPACK, FFT) and LibXC. It provides both
+the CPU executables (jdftx, phonon, wannier) and the GPU executables
+(jdftx_gpu, phonon_gpu, wannier_gpu)."""
+
+# GCC + CUDA-aware OpenMPI (instead of gimkl/Intel MPI, whose OFI layer fails
+# to initialize on the GPU nodes); MKL is added as a dependency
+toolchain = {'name': 'GCC', 'version': '13.3.0'}
+
+source_urls = ['https://github.com/shankar1729/jdftx/archive/refs/tags/']
+sources = ['v%(version)s.tar.gz']
+checksums = ['876374efbf785d02fdf547f7cf64deedc6f5618f5449e775a4c20b28f1696e3d']
+
+builddependencies = [
+    ('CMake', '3.29.3', '', ('GCCcore', '13.3.0')),
+]
+
+dependencies = [
+    ('CUDA', '12.8.0', '', SYSTEM),
+    ('OpenMPI', '5.0.3', versionsuffix),
+    ('imkl', '2024.2.0', '', SYSTEM),
+    ('GSL', '2.8'),
+    ('libxc', '6.2.2'),
+]
+
+# Bouchet GPUs: A40/A5000 (8.6), L40S/RTX 5000 Ada (8.9), H100/H200 (9.0),
+# B200 (10.0), RTX Pro 6000 Blackwell (12.0)
+cuda_compute_capabilities = ['8.6', '8.9', '9.0', '10.0', '12.0']
+
+# CMakeLists.txt lives in the jdftx/ subdirectory of the source tree
+start_dir = 'jdftx'
+
+# JDFTx passes -arch=${CUDA_ARCH} -code=${CUDA_CODE} to nvcc: build SASS for every
+# GPU above, plus compute_86 PTX so newer GPUs can JIT-compile the kernels.
+_cuda_code = ','.join(['sm_86', 'sm_89', 'sm_90', 'sm_100', 'sm_120', 'compute_86'])
+
+configopts = ' '.join([
+    '-DEnableMPI=yes',
+    '-DMPI_CXX_COMPILER="$EBROOTOPENMPI/bin/mpicxx"',
+    '-DCudaAwareMPI=yes',
+    '-DPinnedHostMemory=yes',
+    '-DEnableMKL=yes',
+    '-DMKL_PATH="$MKLROOT"',
+    '-DEnableLibXC=yes',
+    '-DLIBXC_PATH="$EBROOTLIBXC"',
+    '-DGSL_PATH="$EBROOTGSL"',
+    '-DEnableCUDA=yes',
+    '-DEnableCuSolver=yes',
+    '-DCUDA_TOOLKIT_ROOT_DIR="$EBROOTCUDA"',
+    '-DCUDA_HOST_COMPILER="$EBROOTGCCCORE/bin/g++"',
+    '-DCUDA_ARCH=compute_86',
+    '-DCUDA_CODE="%s"' % _cuda_code,
+])
+
+# the regression tests are full SCF runs; run them separately after install
+runtest = False
+
+sanity_check_paths = {
+    'files': ['bin/jdftx', 'bin/phonon', 'bin/wannier',
+              'bin/jdftx_gpu', 'bin/phonon_gpu', 'bin/wannier_gpu',
+              'lib/libjdftx.%s' % SHLIB_EXT, 'lib/libjdftx_gpu.%s' % SHLIB_EXT],
+    'dirs': ['share/jdftx/pseudopotentials/GBRV', 'share/jdftx/pseudopotentials/SG15', 'share/jdftx/scripts'],
+}
+
+# the build node has no GPU driver, so only the CPU executable can run here;
+# jdftx_gpu is tested separately on GPU nodes
+sanity_check_commands = ['jdftx -h']
+
+modextrapaths = {'PATH': 'share/jdftx/scripts'}
+
+moduleclass = 'chem'
