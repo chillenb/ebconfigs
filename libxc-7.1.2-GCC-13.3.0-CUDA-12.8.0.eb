@@ -1,0 +1,50 @@
+easyblock = 'CMakeMake'
+
+name = 'libxc'
+version = '7.1.2'
+versionsuffix = '-CUDA-%(cudaver)s'
+
+homepage = 'https://libxc.gitlab.io'
+description = """Libxc is a library of exchange-correlation functionals for density-functional theory.
+ The aim is to provide a portable, well tested and reliable set of exchange and correlation functionals.
+ This build is CUDA-enabled: the functional evaluation routines expect GPU (device) pointers."""
+
+toolchain = {'name': 'GCC', 'version': '13.3.0'}
+
+source_urls = ['https://gitlab.com/%(name)s/%(name)s/-/archive/%(version)s/']
+sources = [SOURCE_TAR_GZ]
+checksums = ['c517ce61820ea8114664a4280b6a6bc74a4f22f1fd1ea4ddecd6df0caeeae4f4']
+
+builddependencies = [
+    ('CMake', '3.29.3'),
+    ('Perl', '5.38.2'),
+]
+
+dependencies = [
+    ('CUDA', '12.8.0', '', SYSTEM),
+]
+
+# Bouchet GPUs: A40/A5000 (8.6), L40S/RTX 5000 Ada (8.9), H100/H200 (9.0),
+# B200 (10.0), RTX Pro 6000 Blackwell (12.0); CMakeMake passes these as CMAKE_CUDA_ARCHITECTURES
+cuda_compute_capabilities = ['8.6', '8.9', '9.0', '10.0', '12.0']
+
+# shared library only (a static CUDA build would double the already long compile);
+# no Fortran interface; derivatives up to 3rd order (kxc), as libxc's default is only 2
+configopts = ' '.join([
+    '-DENABLE_CUDA=ON',
+    '-DBUILD_SHARED_LIBS=ON',
+    '-DENABLE_FORTRAN=OFF',
+    '-DENABLE_XHOST=OFF',
+    '-DMAXORDER=3',
+    '-DBUILD_TESTING=OFF',
+])
+
+# the tests and xc-info need a GPU; the build node has none
+runtest = False
+
+sanity_check_paths = {
+    'files': ['bin/xc-info', 'include/xc.h', 'include/xc_funcs.h', 'lib/libxc.%s' % SHLIB_EXT],
+    'dirs': ['lib/pkgconfig', 'lib/cmake/Libxc'],
+}
+
+moduleclass = 'chem'
