@@ -1,0 +1,14 @@
+lattice Cubic 15
+coulomb-interaction Isolated
+coulomb-truncation-embed 0 0 0
+include water.ionpos
+coords-type Cartesian
+ion-species GBRV/$ID_pbe.uspp
+elec-cutoff 20 100
+elec-ex-corr gga-PBE
+fluid LinearPCM
+pcm-variant CANDLE
+fluid-solvent H2O
+electronic-minimize energyDiffThreshold 1e-8
+dump-name water-internal.$VAR
+dump End None

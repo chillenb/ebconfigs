@@ -1,0 +1,31 @@
+# PBE hollow_complex, Cu q19, 210 electrons, frozen geometry (make_inputs.py)
+lattice \
+     6.8578161063    0.0000000000    0.0000000000 \
+     0.0000000000    6.8578161063    0.0000000000 \
+     0.0000000000    0.0000000000   51.5101547050
+coords-type Cartesian
+ion Cu    0.0000000000    0.0000000000   18.7967644214 0
+ion Cu    3.4289080531    3.4289080531   18.7967644214 0
+ion Cu    3.4289080531    0.0000000000   22.3965530377 0
+ion Cu    0.0000000000    3.4289080531   22.2853389533 0
+ion Cu    0.0000000000    0.0000000000   25.7550773525 0
+ion Cu    3.4289080531    3.4289080531   25.7550773525 0
+ion Cu    3.4289080531    0.0000000000   29.1136016673 0
+ion Cu    0.0000000000    3.4289080531   29.2248157518 0
+ion Cu    0.0000000000    0.0000000000   32.7133902837 0
+ion Cu    3.4289080531    3.4289080531   32.7133902837 0
+ion C     3.4289080531    0.0000000000   34.9586284477 0
+ion C     3.4289080531    0.0000000000   16.5515262574 0
+ion O     3.4289080531    0.0000000000   37.2032554854 0
+ion O     3.4289080531    0.0000000000   14.3068992197 0
+ion-species /nfs/roberts/pi/pi_tz324/cgh42/solvation_work/sautet-repro/jdftx/pseudo/Cu-q19.upf
+ion-species /nfs/roberts/pi/pi_tz324/cgh42/solvation_work/sautet-repro/jdftx/pseudo/C.upf
+ion-species /nfs/roberts/pi/pi_tz324/cgh42/solvation_work/sautet-repro/jdftx/pseudo/O.upf
+elec-ex-corr gga-x-pbe gga-c-pbe
+elec-cutoff 180
+kpoint-folding 14 14 1
+elec-smearing Fermi 0.0018374661
+elec-n-bands 130
+spintype no-spin
+electronic-SCF energyDiffThreshold 1e-8
+dump End None

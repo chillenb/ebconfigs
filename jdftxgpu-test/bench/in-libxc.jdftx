@@ -1,0 +1,20 @@
+# PBE top_CO_ads, Cu q19, 20 electrons, frozen geometry (make_inputs.py)
+lattice \
+     6.8578161063    0.0000000000    0.0000000000 \
+     0.0000000000    6.8578161063    0.0000000000 \
+     0.0000000000    0.0000000000   51.5101547050
+coords-type Cartesian
+ion C     0.0000000000    0.0000000000   36.1689293884 0
+ion C     0.0000000000    0.0000000000   15.3412253167 0
+ion O     0.0000000000    0.0000000000   38.3498425792 0
+ion O     0.0000000000    0.0000000000   13.1603121258 0
+ion-species /nfs/roberts/pi/pi_tz324/cgh42/solvation_work/sautet-repro/jdftx/pseudo/C.upf
+ion-species /nfs/roberts/pi/pi_tz324/cgh42/solvation_work/sautet-repro/jdftx/pseudo/O.upf
+elec-ex-corr gga-x-pbe gga-c-pbe
+elec-cutoff 180
+kpoint-folding 14 14 1
+elec-smearing Fermi 0.0018374661
+elec-n-bands 16
+spintype no-spin
+electronic-SCF energyDiffThreshold 1e-8
+dump End None
