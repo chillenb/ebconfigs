@@ -1,0 +1,62 @@
+easyblock = 'MakeCp'
+
+name = 'vast-preload-lib'
+version = '1.0.7'
+
+homepage = 'https://github.com/vast-data/vast-preload-lib'
+description = """LD_PRELOAD library that injects O_DIRECT into open() calls for files whose
+paths match patterns in a config file, without modifying the application (also works for
+MPI-IO). Loading the module adds the library to LD_PRELOAD; it stays inactive until
+LD_VAST_PATHFILE is set:
+  LD_VAST_PATHFILE=<file> <app>
+LD_VAST_PATHFILE lists newline-separated path patterns ('*' and '?' wildcards; '*' also matches
+'/'). Set LD_VAST_LOG_TOPICS=2 to log each file that gets O_DIRECT."""
+
+toolchain = {'name': 'GCC', 'version': '13.3.0'}
+
+source_urls = ['https://github.com/vast-data/vast-preload-lib/archive/refs/tags/']
+sources = [{'download_filename': 'v1.0-7.tar.gz', 'filename': '%(name)s-%(version)s.tar.gz'}]
+patches = ['%(name)s-%(version)s_inactive-without-pathfile.patch']
+checksums = [
+    {'vast-preload-lib-1.0.7.tar.gz': '48cc27692724c42af884d1f4ae214ceae17e415d8ffe584cd4d140a43a1b9ebd'},
+    {'vast-preload-lib-1.0.7_inactive-without-pathfile.patch':
+     '7b80c0007a4d8a1f18bdc09823f79371e9a5c06a6cd8a6a6bc0a48e33f72d268'},
+]
+
+dependencies = [
+    ('Boost', '1.85.0'),
+]
+
+# upstream Makefile hard-codes the patch level as 5 for the 1.0.7 release; set the reported version
+# (also builds the small test program used in sanity_check_commands)
+buildopts = 'CC="$CC" CXX="$CXX" LIB_VER_PATCHLEVEL=7 CXXFLAGS_EXTRA="$CPPFLAGS" LDFLAGS_EXTRA="$LDFLAGS"'
+buildopts += ' && make -C test CXX="$CXX"'
+
+files_to_copy = [
+    (['bin/libvastpreload.so'], 'lib'),
+    (['test/test'], 'share/vast-preload-lib'),
+    (['README.md', 'CHANGELOG.md', 'LICENSE'], 'share/doc/vast-preload-lib'),
+]
+
+sanity_check_paths = {
+    'files': ['lib/libvastpreload.so'],
+    'dirs': [],
+}
+
+sanity_check_commands = [
+    # preloaded but inactive without a path file, and only a warning for an unreadable one
+    "LD_PRELOAD=%(installdir)s/lib/libvastpreload.so /usr/bin/cat /etc/hostname",
+    "env LD_VAST_PATHFILE=/nonexistent LD_PRELOAD=%(installdir)s/lib/libvastpreload.so /usr/bin/true",
+    # library resolves its deps (Boost, libstdc++) via RPATH, without any modules loaded
+    "! env -i /usr/bin/ldd %(installdir)s/lib/libvastpreload.so | grep 'not found'",
+    # O_DIRECT gets injected for a matching path
+    "d=$(mktemp -d -p $HOME) && echo abc > $d/f && echo \"$d/*\" > $d/paths && "
+    "LD_PRELOAD=%(installdir)s/lib/libvastpreload.so LD_VAST_PATHFILE=$d/paths LD_VAST_LOG_TOPICS=2 "
+    "%(installdir)s/share/vast-preload-lib/test $d/f 2>&1 | grep -q 'Injecting O_DIRECT'; rc=$?; rm -rf $d; exit $rc",
+]
+
+modextravars = {'VAST_PRELOAD_LIB': '%(installdir)s/lib/libvastpreload.so'}
+# inactive until LD_VAST_PATHFILE is set (see patch)
+modextrapaths = {'LD_PRELOAD': 'lib/libvastpreload.so'}
+
+moduleclass = 'lib'

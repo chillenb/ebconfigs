@@ -1,0 +1,57 @@
+Upstream initlib() leaves pathMatchStore NULL when LD_VAST_PATHFILE is unset, so every preloaded
+process segfaults on its first open(); an unreadable path file makes every process exit(1).
+With the module putting the library in LD_PRELOAD, stay inactive (pass-through) in both cases
+and only warn about an unreadable path file.
+author: Bruce (Raft agent) for cgh42, 2026-11-12
+diff --git a/source/Main.cpp b/source/Main.cpp
+index e9563da..9922df1 100644
+--- a/source/Main.cpp
++++ b/source/Main.cpp
+@@ -33,29 +33,33 @@ static __attribute__((constructor)) void initlib(void)
+ 			log_fprintf(stderr, LOG_PREFIX "libOpts: %d\n", libOpts);
+ 	}
+ 
++	// always allocate the stores: the read/write EINVAL and close interceptors use fdStore even
++	// when injection is inactive
++	pathMatchStore = new PathMatchStore();
++	fdStore = new FDStore();
++
+ 	const char* libPathFileStr = getenv(ENV_LIB_PATHFILE);
+-	if(libPathFileStr)
+-	{
+-		// needs to be alloc'ed here as it's otherwise not initialized as static var
+-		pathMatchStore = new PathMatchStore();
++	if(!libPathFileStr)
++	{ // no path file: stay inactive (interceptors only pass calls through)
++		if(libLogTopics & ENV_LOG_TOPIC_INIT)
++			log_fprintf(stderr, LOG_PREFIX "LD_VAST_PATHFILE not set; O_DIRECT injection disabled\n");
+ 
+-		bool loadRes = pathMatchStore->loadPathFile(libPathFileStr);
++		return;
++	}
++
++	bool loadRes = pathMatchStore->loadPathFile(libPathFileStr);
+ 
+-		if(!loadRes)
+-		{
+-			log_fprintf(stderr, LOG_PREFIX "ERROR: Loading of path file failed: %s\n",
+-				libPathFileStr);
+-			exit(1);
+-		}
++	if(!loadRes)
++	{ // warn and stay inactive instead of exiting, so a bad path file can't break every command
++		log_fprintf(stderr, LOG_PREFIX "WARNING: Loading of path file failed: %s; "
++			"O_DIRECT injection disabled\n", libPathFileStr);
+ 
++		return;
+ 	}
+ 
+ 	if(libLogTopics & ENV_LOG_TOPIC_INIT)
+ 		log_fprintf(stderr, LOG_PREFIX "Loaded paths: %d\n", pathMatchStore->size() );
+ 
+-	// needs to be alloc'ed here as it's otherwise not initialized as static var
+-	fdStore = new FDStore();
+-
+ 	initDone = true; // signal to interceptors that they can be effective now
+ 
+ 	if(libLogTopics & ENV_LOG_TOPIC_INIT)
