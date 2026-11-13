@@ -1,0 +1,35 @@
+easyblock = 'Tarball'
+
+name = 'cuSPARSELt'
+version = '0.10.0.12'
+versionsuffix = '-CUDA-%(cudaver)s'
+
+homepage = 'https://docs.nvidia.com/cuda/cusparselt/index.html'
+description = """NVIDIA cuSPARSELt is a high-performance CUDA library dedicated to general matrix-matrix operations in
+which at least one operand is a sparse matrix"""
+
+toolchain = SYSTEM
+
+local_cudamajver = '13'
+
+local_arch = {'arm64': 'sbsa', 'aarch64': 'sbsa'}.get(ARCH, ARCH)
+source_urls = ['https://developer.download.nvidia.com/compute/cusparselt/redist/libcusparse_lt/linux-%s/' % local_arch]
+sources = ['libcusparse_lt-linux-%s-%%(version)s_cuda%s-archive.tar.xz' %
+           (local_arch, local_cudamajver)]
+checksums = [{
+    'libcusparse_lt-linux-x86_64-%%(version)s_cuda%s-archive.tar.xz' % local_cudamajver:
+        '1b6a6230655b7f41b13029129b9cda9f560ed3c101901622363977d6c1c8824f',
+    'libcusparse_lt-linux-sbsa-%%(version)s_cuda%s-archive.tar.xz' % local_cudamajver:
+        'a79fa6cddffd2273de4be2c3fa8c8f21d70646a2872231c6b62e20d754530707',
+}]
+
+dependencies = [('CUDA', '13.5.0')]
+
+sanity_check_paths = {
+    'files': ['include/cusparseLt.h',
+              'lib/libcusparseLt.%s' % SHLIB_EXT,
+              'lib/libcusparseLt_static.a'],
+    'dirs': [],
+}
+
+moduleclass = 'lib'
