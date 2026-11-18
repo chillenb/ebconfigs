@@ -46,7 +46,9 @@ sanity_check_paths = {
     'dirs': ['share/jdftx/pseudopotentials/GBRV', 'share/jdftx/pseudopotentials/SG15', 'share/jdftx/scripts'],
 }
 
-sanity_check_commands = ['jdftx -h']
+# Run as an MPI singleton: some sites (e.g. Grace) set I_MPI_PMI_LIBRARY=libpmi2.so in the impi
+# module, and singleton MPI_Init then fails outside srun.
+sanity_check_commands = ['env -u I_MPI_PMI_LIBRARY jdftx -h']
 
 modextrapaths = {'PATH': 'share/jdftx/scripts'}
 
