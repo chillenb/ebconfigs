@@ -1,0 +1,105 @@
+easyblock = 'CMakeMake'
+
+name = 'ONCVPSP'
+# development snapshot after the 4.0.1 release (2019): master at commit dc150ab (2026-05-14),
+# which adds the CMake build, libxc 5/6/7 support, TOML input, PSML output and UPF fixes
+local_commit = 'dc150ab47d78413914cac8e07da3b3013397711d'
+version = '4.0.1.20260514'
+
+homepage = 'https://github.com/oncvpsp/oncvpsp'
+description = """ONCVPSP generates optimized norm-conserving Vanderbilt pseudopotentials
+(scalar-relativistic oncvpsp.x, non-relativistic oncvpspnr.x and fully relativistic
+oncvpspr.x), with output in psp8, UPF and PSML formats. Built with LibXC and
+TOML input support. The wrapper scripts oncvpsp-run.sh, oncvpsp-run_nr.sh and
+oncvpsp-run_r.sh run a <prefix>.dat input and plot the results with gnuplot
+(add -np to skip plotting); example inputs are in $EBROOTONCVPSP/share/oncvpsp/tests/data."""
+
+toolchain = {'name': 'gfbf', 'version': '2024a'}
+
+local_cpm_version = '0.42.0'
+local_tomlf_version = '0.4.3'
+
+sources = [
+    {
+        'source_urls': ['https://github.com/oncvpsp/oncvpsp/archive/'],
+        'download_filename': '%s.tar.gz' % local_commit,
+        'filename': 'ONCVPSP-%s.tar.gz' % local_commit,
+    },
+    # CMake fetches these from GitHub via CPM at configure time; ship them as sources
+    # so the build works offline (CPM_SOURCE_CACHE + CPM_toml-f_SOURCE below)
+    {
+        'source_urls': ['https://github.com/toml-f/toml-f/archive/refs/tags/'],
+        'download_filename': 'v%s.tar.gz' % local_tomlf_version,
+        'filename': 'toml-f-%s.tar.gz' % local_tomlf_version,
+    },
+    {
+        'source_urls': ['https://github.com/cpm-cmake/CPM.cmake/releases/download/v%s/' % local_cpm_version],
+        'download_filename': 'CPM.cmake',
+        'filename': 'CPM-%s.cmake' % local_cpm_version,
+        'extract_cmd': 'cp %s .',  # plain file: copy into the build dir
+    },
+]
+checksums = [
+    '76c5fc84dd91a757a0dc5c0dfec931c268f9aae8af5fd1f2c9a8546063e5710c',  # ONCVPSP-<commit>.tar.gz
+    'd7fdd12a68c2e433785f453b20c1984bed037d213a35d8f0946da7e7f6b89c45',  # toml-f-0.4.3.tar.gz
+    '2020b4fc42dba44817983e06342e682ecfc3d2f484a581f11cc5731fbe4dce8a',  # CPM-0.42.0.cmake
+]
+
+start_dir = 'oncvpsp-%s' % local_commit
+
+builddependencies = [
+    ('CMake', '3.29.3'),
+    ('pkgconf', '2.2.0'),
+    ('Perl', '5.38.2'),  # fldiff.pl in the test suite
+]
+
+dependencies = [
+    ('libxc', '6.2.2'),
+    ('gnuplot', '6.0.1'),
+]
+
+# non-archive sources are copied into the build dir; put CPM.cmake where CPM's bootstrap looks
+preconfigopts = 'mkdir -p %%(builddir)s/cpm-cache/cpm && cp %%(builddir)s/CPM-%s.cmake %%(builddir)s/cpm-cache/cpm/CPM_%s.cmake && ' % (
+    local_cpm_version, local_cpm_version)
+
+configopts = ' '.join([
+    '-DONCVPSP_WITH_Libxc=ON',
+    '-DONCVPSP_WITH_TOML=ON',
+    '-DLibxc_ROOT=$EBROOTLIBXC',
+    '-DCPM_SOURCE_CACHE=%(builddir)s/cpm-cache',
+    '-DCPM_toml-f_SOURCE=%%(builddir)s/toml-f-%s' % local_tomlf_version,
+])
+
+# ctest suite: 23 scalar-relativistic atoms compared against reference outputs
+runtest = 'test'
+
+local_share = '%(installdir)s/share/oncvpsp'
+local_scripts = ['run.sh', 'run_nr.sh', 'run_r.sh', 'replot.sh', 'extract.sh',
+                 'multirun.sh', 'multirun_r.sh', 'compare.sh', 'compare_r.sh', 'compare_psml.sh']
+postinstallcmds = [
+    'mkdir -p %s/scripts %s/tests' % (local_share, local_share),
+    'cp -r %%(start_dir)s/scripts/* %s/scripts/' % local_share,
+    'cp -r %%(start_dir)s/tests/data %%(start_dir)s/tests/refs %s/tests/' % local_share,
+    'rm -f %s/tests/data/*.out %s/tests/data/*.diff' % (local_share, local_share),
+    'cp -r %%(start_dir)s/doc %s/' % local_share,
+    # point the helper scripts at the installed executables and data (what set_path does in-tree)
+    'cd %s/scripts && sed -i -e "s:^PREFIX=.*$:PREFIX=%s:" -e "s:^BIN_DIR=.*$:BIN_DIR=%%(installdir)s/bin:" '
+    '-e "s:\\$PREFIX/src/:%%(installdir)s/bin/:" %s' % (local_share, local_share, ' '.join(local_scripts)),
+    'chmod a+x %s/scripts/*.sh %s/scripts/*.pl %s/scripts/*.py' % (local_share, local_share, local_share),
+    # expose the run/replot scripts under unambiguous names
+] + ['ln -sf ../share/oncvpsp/scripts/%s %%(installdir)s/bin/oncvpsp-%s' % (s, s)
+     for s in ['run.sh', 'run_nr.sh', 'run_r.sh', 'replot.sh', 'extract.sh']]
+
+sanity_check_paths = {
+    'files': ['bin/oncvpsp.x', 'bin/oncvpspnr.x', 'bin/oncvpspr.x', 'bin/oncvpsp-run.sh',
+              'share/oncvpsp/tests/data/08_O.dat'],
+    'dirs': ['share/oncvpsp/scripts', 'share/oncvpsp/doc'],
+}
+
+# generate an oxygen pseudopotential from the bundled example (no plotting)
+sanity_check_commands = [
+    'cd $TMPDIR && cp $EBROOTONCVPSP/share/oncvpsp/tests/data/08_O.dat . && '
+    'oncvpsp-run.sh 08_O -np && grep -q "Begin PSPCODE8" 08_O.out',
+]
+
+moduleclass = 'chem'
