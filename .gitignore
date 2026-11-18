@@ -1,0 +1,7 @@
+# Slurm build logs written by build*.sh (--output/--error)
+*.out
+*.err
+
+# Benchmark / test run output
+jdftxgpu-test/bench/bench-*.log
+jdftxgpu-test/bench/out-*
