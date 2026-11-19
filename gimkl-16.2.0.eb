@@ -1,0 +1,21 @@
+easyblock = 'Toolchain'
+
+name = 'gimkl'
+version = '16.2.0'
+
+homepage = '(none)'
+description = """GNU Compiler Collection (GCC) based compiler toolchain, including Intel MPI
+ and Intel Math Kernel Library (MKL) with FFTW interfaces."""
+
+toolchain = SYSTEM
+
+local_comp = ('GCC', '16.2.0')
+
+dependencies = [
+    local_comp,
+    ('impi', '2021.17.2', '', local_comp),
+    ('imkl', '2025.3.1', '', SYSTEM),
+    ('imkl-FFTW', '2025.3.1', '', ('gimpi', version)),
+]
+
+moduleclass = 'toolchain'

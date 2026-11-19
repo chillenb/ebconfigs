@@ -17,6 +17,16 @@ break them.
   directory. Slurm logs go to `build<name>.out/.err` (ignored by git).
 - `jdftxgpu-test/` — JDFTx GPU tests, benchmarks and the CPU -> GPU migration note.
 
+## donuts
+
+Some easyconfigs here target `donuts` (AlmaLinux 10 mini-server, no Slurm) instead of Bouchet:
+
+- Install prefix: `/opt/easybuild` (shared via the `easybuild` group; settings in `/etc/profile.d/z01_easybuild.sh`)
+- Upstream easyconfigs: `/opt/easybuild/easyconfigs-chillenb` (clone of `chillenb/easybuild-easyconfigs`)
+- `builddonuts-<name>.sh` scripts are plain bash, run with `bash builddonuts-<name>.sh`.
+- `gimkl-16.2.0` (GCC 16.2.0 + impi 2021.17.2 + imkl 2025.3.1): impi has **no UCX** (donuts has no
+  InfiniBand), so don't reuse it on Bouchet as-is.
+
 ## Rules
 
 - Build on `devel` (at most 4 cores) or on a priority partition with `-A prio_tz324`; never on `day`.
