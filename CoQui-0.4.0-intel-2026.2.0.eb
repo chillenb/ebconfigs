@@ -1,0 +1,164 @@
+# CoQui: THC/ISDF-based RPA/GW for solids (Yeh & Morales). Requested by Bruce/chillenb 2026-11-18
+# (#solvation-work:#13) for comparison with our ISDF-RPA.
+# All CMake FetchContent dependencies are pinned below and built offline
+# (FETCHCONTENT_FULLY_DISCONNECTED). Moving branches (nda@tensor, c2py@unstable) pinned to the
+# commits current on 2026-11-18.
+# Python interface: built against NumPy 2.4.4 headers from the gimkl-2024a stack, but NumPy is
+# NOT a module dependency (loading gimkl would swap impi/imkl). For the PySCF converter load
+# localpyscf (or NumPy) together with this module.
+easyblock = 'CMakeMake'
+
+name = 'CoQui'
+version = '0.4.0'
+
+homepage = 'https://github.com/AbInitioQHub/coqui'
+description = """CoQui (Correlated Quantum interface): THC/Cholesky Coulomb integrals, HF, RPA,
+ GW and beyond for periodic and molecular systems, with MPI + SLATE distributed linear algebra.
+ Includes the Python interface and the PySCF / QE converters."""
+
+toolchain = {'name': 'intel', 'version': '2026.2.0'}
+toolchainopts = {'pic': True, 'usempi': True, 'openmp': True}
+
+# cpp2py (via nda) imports numpy at configure time; tests import it too
+local_numpy_sp = '/vast/palmer/pi/zhu/shared/software/NumPy/2.4.4-gimkl-2024a/lib/python3.12/site-packages'
+local_numpy_inc = local_numpy_sp + '/numpy/_core/include'
+# cpp2py configure also checks `import scipy`
+local_scipy_sp = '/vast/palmer/pi/zhu/shared/software/SciPy/1.17.1-gimkl-2024a/lib/python3.12/site-packages'
+local_pypath = 'export PYTHONPATH=%s:%s:$PYTHONPATH && ' % (local_numpy_sp, local_scipy_sp)
+
+sources = [
+    {'source_urls': ['https://github.com/AbInitioQHub/coqui/archive/refs/tags/'],
+     'download_filename': 'v%(version)s.tar.gz', 'filename': 'coqui-%(version)s.tar.gz'},
+    {'filename': 'nda-624fe5c.tar.gz',
+     'git_config': {'url': 'https://github.com/triqs', 'repo_name': 'nda',
+                    'commit': '624fe5c0a931142850372ed05de897404e2dfd1c'}},
+    {'filename': 'c2py-58e0586.tar.gz',
+     'git_config': {'url': 'https://github.com/flatironinstitute', 'repo_name': 'c2py',
+                    'commit': '58e0586a32cd3e4bc197b2ca753b51f128db39d2'}},
+    {'filename': 'cppdlr-f6bd6ab.tar.gz',
+     'git_config': {'url': 'https://github.com/flatironinstitute', 'repo_name': 'cppdlr',
+                    'commit': 'f6bd6ab1823403015486c2c6b3399fd4db4468c1'}},
+    {'filename': 'wannier90-3ff086a.tar.gz',
+     'git_config': {'url': 'https://github.com/wannier-developers', 'repo_name': 'wannier90',
+                    'commit': '3ff086adf9c223c140c54af7070c6e6f5871dbe9'}},
+    {'filename': 'tomlplusplus-3.4.0.tar.gz',
+     'git_config': {'url': 'https://github.com/marzer', 'repo_name': 'tomlplusplus', 'tag': 'v3.4.0'}},
+    {'filename': 'spdlog-1.8.0.tar.gz',
+     'git_config': {'url': 'https://github.com/gabime', 'repo_name': 'spdlog', 'tag': 'v1.8.0'}},
+    {'filename': 'Catch2-2.13.10.tar.gz',
+     'git_config': {'url': 'https://github.com/catchorg', 'repo_name': 'Catch2', 'tag': 'v2.13.10'}},
+    {'filename': 'cpptrace-0.8.2.tar.gz',
+     'git_config': {'url': 'https://github.com/jeremy-rifkin', 'repo_name': 'cpptrace', 'tag': 'v0.8.2'}},
+    {'filename': 'libdwarf-lite-fe09ca8.tar.gz',
+     'git_config': {'url': 'https://github.com/jeremy-rifkin', 'repo_name': 'libdwarf-lite',
+                    'commit': 'fe09ca800b988e2ff21225ac5e7468ceade2a30e'}},
+    # nda's own dependencies (cloned from moving branches by nda/deps/CMakeLists.txt otherwise)
+    {'filename': 'cpp2py-4721d64.tar.gz',
+     'git_config': {'url': 'https://github.com/TRIQS', 'repo_name': 'cpp2py',
+                    'commit': '4721d6484237ba0e402648cd963ff036b2557c67'}},
+    {'filename': 'googletest-a46a601.tar.gz',
+     'git_config': {'url': 'https://github.com/google', 'repo_name': 'googletest',
+                    'commit': 'a46a6012a133c7c0929fdae55b321c2fe65f3c5f'}},
+    {'filename': 'itertools-d32d2b2.tar.gz',
+     'git_config': {'url': 'https://github.com/TRIQS', 'repo_name': 'itertools',
+                    'commit': 'd32d2b20a1beda709a43bd56ac85ea6d41efcdef'}},
+    {'filename': 'h5-bdbb040.tar.gz',
+     'git_config': {'url': 'https://github.com/TRIQS', 'repo_name': 'h5',
+                    'commit': 'bdbb040157088e156032edb33714a915d7782f3b'}},
+    {'filename': 'triqs-mpi-27e1c93.tar.gz',
+     'git_config': {'url': 'https://github.com/TRIQS', 'repo_name': 'mpi',
+                    'commit': '27e1c9353320b3ed80a6e7e3bf0414bf405039d6'}},
+]
+patches = [
+    'CoQui-0.4.0_impi-empty-shared-array.patch',
+    'CoQui-0.4.0_pyscf-kpts-tolerance.patch',
+]
+checksums = [
+    'c8c843809f9f8e9bd679dd1b71ec6fb4106b827e2920d936208db9c1575f9bf8',  # coqui-0.4.0.tar.gz
+    '097d63efc3373ad0b90d11308961b1ce7f16aac8e9e9a40b34adc826655bec36',  # nda-624fe5c.tar.gz
+    '81894f3eb06412ce0e14155c4c44037d115baa22939fb60404a685efe3d93e69',  # c2py-58e0586.tar.gz
+    'ed7ff05de7acd31efdd959f510416d9e69a57a1261c1f2bd40d4af8d114b28e4',  # cppdlr-f6bd6ab.tar.gz
+    '1dfb7d3f00c00f0882784a4e4b2f4f72e48db3a5e1e1c0c0e5b7da2fe0beedf8',  # wannier90-3ff086a.tar.gz
+    '902adb84b89ef2d73779c1915da0f0505a901150a71960e536e17174f7988f88',  # tomlplusplus-3.4.0.tar.gz
+    '077354f78d0aa388a86322b0d737cd0ab39a49ee44f72c51362ab6115750b8a1',  # spdlog-1.8.0.tar.gz
+    '26e6de2a4e2518d9f6017b8753945447d6bc13b5249e6a1fbf638222d852b96f',  # Catch2-2.13.10.tar.gz
+    '4daf07cef2f26bca8c7cfe8fb90894d7f9471b0a3d1660b2bee0ff6bd1abce0f',  # cpptrace-0.8.2.tar.gz
+    '9cea088761add11bf54b6e3e8f9375dba64ae19dd0a6f85f96c488437faf79ca',  # libdwarf-lite-fe09ca8.tar.gz
+    '870d7a63cbda78bf3522b72fbf18df92a3d2d40fee77998acdff19d5aefd50cf',  # cpp2py-4721d64.tar.gz
+    '489727b57dcd77a57c9807699ea07cffa8136e21c7b9a9be25d6e8e1e5ede6b4',  # googletest-a46a601.tar.gz
+    'b2ef09f9b22278f48df7c59dc65313cda0dbb81776a24d39c3c2950245018d50',  # itertools-d32d2b2.tar.gz
+    '4a20c1084229482a83fec59e373dbe2dc4b7bc98f3e471b2ad2f5127d94b6c09',  # h5-bdbb040.tar.gz
+    '1e4dd61928357a2bfe1c199df8f0b0c1ba591e1a8e8832820d42338aa7c9c974',  # triqs-mpi-27e1c93.tar.gz
+    '7a1579c6f130e28822cd74afd4ada7fb07344e5afd86aa250a965d5d5aaea304',  # CoQui-0.4.0_impi-empty-shared-array.patch
+    '5984f8924ce8f82167bc27c59eb9211d0e6f94f1335c18c9d4e57524e010e08e',  # CoQui-0.4.0_pyscf-kpts-tolerance.patch
+]
+
+start_dir = 'coqui-%(version)s'
+
+# ~70 small chained targets: Ninja keeps all cores busy, make -j stalls on target ordering
+generator = 'Ninja'
+build_cmd = 'ninja'
+install_cmd = 'ninja install'
+
+builddependencies = [
+    ('CMake', '3.31.8', '', ('GCCcore', '13.3.0')),
+    ('Ninja', '1.13.0', '', ('GCCcore', '13.3.0')),
+    ('Boost', '1.85.0', '', ('GCC', '13.3.0')),   # header-only use
+    ('Mako', '1.3.5', '', ('GCCcore', '13.3.0')),  # cpp2py code generation
+]
+
+dependencies = [
+    ('HDF5', '2.2.0', '', ('iimpi', '2026.2.0')),
+    ('SLATE', '2025.05.28'),
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('zstd', '1.5.6', '', ('GCCcore', '13.3.0')),
+]
+
+# put nda's dependencies where nda/deps/external_dependency.cmake looks for local sources
+preconfigopts = local_pypath + ' && '.join(['mv %%(builddir)s/%s %%(builddir)s/nda/deps/%s' % x for x in [
+    ('cpp2py', 'Cpp2Py'), ('googletest', 'GTest'), ('itertools', 'itertools'), ('h5', 'h5'), ('mpi', 'mpi')]]) + ' && '
+
+local_dep = '-DFETCHCONTENT_SOURCE_DIR_%s=%%(builddir)s/%s'
+configopts = ' '.join([
+    '-DCOQUI_FFT_BACKEND=MKL',
+    '-DENABLE_SLATE=ON',
+    '-DCOQUI_PYTHON_SUPPORT=ON',
+    '-DPython_NumPy_INCLUDE_DIR=%s' % local_numpy_inc,
+    '-DBLA_VENDOR=Intel10_64lp',
+    '-DMPI_CXX_COMPILER=mpiicpx -DMPI_C_COMPILER=mpiicx -DMPI_Fortran_COMPILER=mpiifx',
+    '-DCTEST_NPROC=4',
+    '-DFETCHCONTENT_FULLY_DISCONNECTED=ON',
+    '-DCPPTRACE_USE_EXTERNAL_ZSTD=ON',
+    local_dep % ('NDA', 'nda'),
+    local_dep % ('C2PY', 'c2py'),
+    local_dep % ('CPPDLR', 'cppdlr'),
+    local_dep % ('WANNIER90', 'wannier90'),
+    local_dep % ('TOMLPLUSPLUS', 'tomlplusplus'),
+    local_dep % ('SPDLOG', 'spdlog'),
+    local_dep % ('CATCH2', 'Catch2'),
+    local_dep % ('CPPTRACE', 'cpptrace'),
+    local_dep % ('LIBDWARF', 'libdwarf-lite'),
+])
+
+# unit tests run through ctest with mpiexec (needs a Slurm allocation with >= 4 tasks)
+runtest = '--output-on-failure'
+test_cmd = 'ctest'
+pretestopts = local_pypath
+
+modextrapaths = {
+    'PYTHONPATH': 'lib/python3.12/site-packages',
+}
+modextravars = {'COQUI_ROOT': '%(installdir)s'}
+
+sanity_check_paths = {
+    'files': ['bin/coqui'],
+    'dirs': ['lib/python3.12/site-packages/coqui'],
+}
+# `coqui --help` exits 1 after printing usage. Full `import coqui` also needs matplotlib (see modloadmsg),
+# so only the compiled h5 module is import-tested here; the PySCF converter example was run by hand.
+sanity_check_commands = ['coqui --help | grep -q Usage', local_pypath + 'python -c "import h5"']
+
+modloadmsg = ("CoQui Python interface (PySCF converter): load localpyscf and matplotlib/3.9.2-gimkl-2024a "
+              "BEFORE this module. Under Slurm run coqui with: srun --mpi=pmi2 coqui --filenames input.toml\n")
+
+moduleclass = 'chem'

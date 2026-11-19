@@ -1,0 +1,38 @@
+# SLATE distributed dense linear algebra (CPU only), dependency of CoQui.
+# Release tarball bundles BLAS++, LAPACK++ and TestSweeper.
+easyblock = 'CMakeMake'
+
+name = 'SLATE'
+version = '2025.05.28'
+
+homepage = 'https://icl.utk.edu/slate/'
+description = """SLATE (Software for Linear Algebra Targeting Exascale) provides
+ distributed dense linear algebra (BLAS, factorizations, eigensolvers) over MPI.
+ Built CPU-only against MKL; includes BLAS++ and LAPACK++."""
+
+toolchain = {'name': 'intel', 'version': '2026.2.0'}
+toolchainopts = {'pic': True, 'usempi': True, 'openmp': True}
+
+source_urls = ['https://github.com/icl-utk-edu/slate/releases/download/v%(version)s/']
+sources = [SOURCELOWER_TAR_GZ]
+checksums = ['eb6167eb4748e91d663b46e6c2218e2eb074d38d9dea3384bd9aaec2581ac15e']
+
+builddependencies = [('CMake', '3.31.8', '', ('GCCcore', '13.3.0'))]
+
+configopts = ' '.join([
+    '-Dgpu_backend=none',      # icpx would otherwise auto-select SYCL
+    '-Dblas=mkl',
+    '-Dblas_int=int32',
+    '-Dblas_threaded=false',   # SLATE parallelizes with OpenMP tasks; sequential MKL inside
+    '-Dbuild_tests=false',
+    '-Dc_api=false',
+    '-DMPI_CXX_COMPILER=mpiicpx -DMPI_C_COMPILER=mpiicx -DMPI_Fortran_COMPILER=mpiifx',
+])
+
+sanity_check_paths = {
+    'files': ['lib/libslate.%s' % SHLIB_EXT, 'lib/libblaspp.%s' % SHLIB_EXT,
+              'lib/liblapackpp.%s' % SHLIB_EXT, 'include/slate/slate.hh'],
+    'dirs': ['lib/cmake/slate', 'lib/cmake/blaspp', 'lib/cmake/lapackpp'],
+}
+
+moduleclass = 'math'

@@ -1,0 +1,14 @@
+Intel MPI returns a NULL base pointer for a 0-byte MPI_Win_allocate_shared segment
+(allowed by the MPI standard; OpenMPI returns non-NULL). Do not abort on empty shared arrays.
+Author: Stella (pi_zhu Grace stack), 2026-11-18
+--- a/src/numerics/shared_array/nda.hpp	2026-11-18 19:24:14.934600736 -0500
++++ b/src/numerics/shared_array/nda.hpp	2026-11-18 19:24:14.945288760 -0500
+@@ -130,7 +130,7 @@
+       ~shared_array() = default; 
+ 
+       void check_and_init() {
+-        utils::check(_win->base(0) != nullptr, "shm::shared_array: win.base(0) == nullptr");
++        utils::check(_size == 0 or _win->base(0) != nullptr, "shm::shared_array: win.base(0) == nullptr");
+         utils::check(_win->size(0) == _size, "shm::shared_array: win.size(0) has incorrect dimension");
+         if (_node_comm->size() > 1) {
+           utils::check(_win->size(1) == 0, "shm::shared_array: win.size(!=0) has incorrect dimension");

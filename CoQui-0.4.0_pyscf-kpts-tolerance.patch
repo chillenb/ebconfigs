@@ -1,0 +1,14 @@
+PySCF converter: compare k-points with a 1e-10 tolerance instead of exact equality
+(pyscf KRKS can store kpts that differ from cell.make_kpts(mesh) by ~1e-16).
+Author: Stella (pi_zhu Grace stack), 2026-11-18
+--- a/src/python/mean_field/pyscf_interface/converter.py	2026-11-18 20:59:27.136811157 -0500
++++ b/src/python/mean_field/pyscf_interface/converter.py	2026-11-18 20:59:27.149448791 -0500
+@@ -51,7 +51,7 @@
+ 
+   kp_grid = tools.get_monkhorst_pack_size(mf.cell, mf.kpts)
+   kpts = mf.cell.make_kpts(kp_grid)
+-  assert np.array_equal(kpts, mf.kpts), "kpts mismatch!"
++  assert np.allclose(kpts, mf.kpts, rtol=0, atol=1e-10), "kpts mismatch!"
+ 
+   nkpts, nbnd = len(mf.kpts), mf.cell.nao_nr()
+   S, H0, dm = mf.get_ovlp(), mf.get_hcore(), mf.make_rdm1()

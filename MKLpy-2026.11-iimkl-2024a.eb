@@ -1,0 +1,67 @@
+easyblock = 'PythonBundle'
+
+name = 'MKLpy'
+version = '2026.11'
+
+homepage = 'https://numpy.org/'
+description = "mkl-umath and mkl-fft"
+
+
+toolchain = {'name': 'iimkl', 'version': '2024a'}
+toolchainopts = {'pic': True, 'lowopt': True}
+
+builddependencies = [
+    ('Cython', '3.1.2', '', ('GCCcore', '13.3.0')),
+    ('scikit-build', '0.17.6', '', ('GCCcore', '13.3.0')),  # required for building mkl-umath and mkl-fft
+    ('CMake', '3.29.3', '', ('GCCcore', '13.3.0')),  # required for building mkl-umath and mkl-fft
+    ('Ninja', '1.13.0', '', ('GCCcore', '13.3.0')),
+    ('Meson', '1.8.2', '', ('GCCcore', '13.3.0')),  # mkl-fft >= 2.4 builds with meson-python
+    ('meson-python', '0.18.0', '', ('GCCcore', '13.3.0')),
+]
+
+dependencies = [
+    ('Python', '3.12.3', '', ('GCCcore', '13.3.0')),
+    ('Python-bundle-PyPI', '2024.06', '', ('GCCcore', '13.3.0')),
+    ('NumPy', '2.4.4', '', ('gimkl', '2024a')),
+]
+
+local_mklumath_commit = "fabfdeb"
+local_mklumath_version = "20260401"
+
+
+# order is important!
+exts_list = [
+    ('mkl-service', '2.6.1', {
+        # workaround for: ValueError: invalid pyproject.toml config: project.license
+        'preinstallopts': "sed -i '/^license =/d' pyproject.toml && ",
+        'sources': ['%(version)s.tar.gz'],
+        'source_urls': ['https://github.com/IntelPython/mkl-service/archive/'],
+        'checksums': ['88fbad376f6cccce83345368f6af88cf3ae03d5eacf523862c3a62967541b4af'],
+        'modulename': 'mkl',
+    }),
+    ('mkl-umath', local_mklumath_version, {
+        # workaround for: ValueError: invalid pyproject.toml config: project.license
+        'preinstallopts': "sed -i '/^license =/d' pyproject.toml && ",
+        'sources': ['%s.tar.gz' % local_mklumath_commit],
+        'source_urls': ['https://github.com/IntelPython/mkl_umath/archive/'],
+        'checksums': ['ff6616b49191ced8bfe38a3a8bc3b3d7ebe01374bde3052790169aab7c9ed715'],
+    }),
+    # 2.4.0 release: fixes forward/ortho scaling when axes is a strict subset of the array axes
+    # (found 2026-11-18; mkl-fft 2.2.0dev6 in MKLpy/2026.03 is wrong for direct mkl_fft.fftn calls)
+    ('mkl-fft', '2.4.0', {
+        # meson.build asks for meson>=1.8.3; 1.8.2 is the newest on GCCcore-13.3.0 (bugfix-level difference)
+        'preinstallopts': "sed -i '/^license =/d' pyproject.toml && "
+                          "sed -i \"s/meson_version: '>=1.8.3'/meson_version: '>=1.8.2'/\" meson.build && ",
+        'sources': ['%(version)s.tar.gz'],
+        'source_urls': ['https://github.com/IntelPython/mkl_fft/archive/refs/tags/'],
+        'checksums': ['1746a3f928c00bce5c969f00a1749c72b515498d17484287bc74dadb4d46dec5'],
+    }),
+]
+
+# regression check for the partial-axes normalization bug
+sanity_check_commands = [
+    "python -c 'import numpy as np, mkl_fft; a=np.random.rand(4,3,5)+0j; "
+    "assert np.allclose(mkl_fft.fftn(a, axes=(1,2), norm=\"forward\"), np.fft.fftn(a, axes=(1,2))/15)'",
+]
+
+moduleclass = 'lang'
