@@ -16,6 +16,8 @@ break them.
 - `build<name>.sh` — one sbatch script per build; run with `sbatch build<name>.sh` from this
   directory. Slurm logs go to `build<name>.out/.err` (ignored by git).
 - `jdftxgpu-test/` — JDFTx GPU tests, benchmarks and the CPU -> GPU migration note.
+- `tools/pybundle/` — scripts for updating a Python-bundle-PyPI to current PyPI releases
+  (version updates, resolver and build-requirement checks); see its README.
 
 ## donuts
 

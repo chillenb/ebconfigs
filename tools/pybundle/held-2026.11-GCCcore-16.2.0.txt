@@ -1,0 +1,6 @@
+# Python-bundle-PyPI 2026.11 (GCCcore 16.2.0): extensions held below their latest release.
+# Use with: update_exts.py IN.eb OUT.eb --pin-file held-2026.11-GCCcore-16.2.0.txt
+# Re-check each reason before the next update; drop a pin once its cap is gone.
+bitstring==4.4.0        # 5.x needs tibs>=2 (tibs module is 0.5.7; updating it means regenerating its crate list)
+CacheControl==0.14.4    # poetry (2.3.4 and latest 2.5.1) requires cachecontrol<0.15
+pkginfo==1.13.3         # poetry (2.3.4 and latest 2.5.1) requires pkginfo<2.0
