@@ -29,6 +29,15 @@ Some easyconfigs here target `donuts` (AlmaLinux 10 mini-server, no Slurm) inste
 - `gimkl-16.2.0` (GCC 16.2.0 + impi 2021.17.2 + imkl 2025.3.1): impi has **no UCX** (donuts has no
   InfiniBand), so don't reuse it on Bouchet as-is.
 
+## pizza
+
+`pizza` (RHEL 9, 2x Xeon 8268, one Tesla P100) mirrors Bouchet's stack at the same paths, so
+most easyconfigs here are reused as-is. Installs into `/sw` are done by `sudo sw-install <commit> <file.eb>`.
+
+- The P100 is Pascal (sm_60): use CUDA 12.x (CUDA 13 dropped Pascal) and cuTENSOR <= 2.1.0.
+- `CuPy-14.2.0-gimkl-2024a-CUDA-12.8.0-cuTENSOR-2.1.0` adds sm_60 cubins. CuPy builds without
+  sm_60 load on the P100 but their CUB reductions silently return wrong results.
+
 ## Rules
 
 - Build on `devel` (at most 4 cores) or on a priority partition with `-A prio_tz324`; never on `day`.
